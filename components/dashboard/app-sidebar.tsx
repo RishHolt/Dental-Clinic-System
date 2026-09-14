@@ -1,78 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import {
-  LayoutGrid,
-  RotateCcw,
-  Calendar,
-  Users,
-  Files,
-  HandCoins,
-  ChevronUp,
-} from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ChevronUp, User, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NAV_SECTIONS } from "@/lib/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-interface NavItem {
-  title: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-interface NavSection {
-  title: string;
-  items: NavItem[];
-}
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    title: "Today",
-    items: [
-      {
-        title: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutGrid,
-      },
-      {
-        title: "Daily Waitlist",
-        href: "/daily-waitlist",
-        icon: RotateCcw,
-      },
-      {
-        title: "Calendar",
-        href: "/calendar",
-        icon: Calendar,
-      },
-    ],
-  },
-  {
-    title: "Records",
-    items: [
-      {
-        title: "Patient",
-        href: "/patient",
-        icon: Users,
-      },
-      {
-        title: "Masterfile",
-        href: "/masterfile",
-        icon: Files,
-      },
-    ],
-  },
-  {
-    title: "Finance",
-    items: [
-      {
-        title: "Expenses",
-        href: "/expenses",
-        icon: HandCoins,
-      },
-    ],
-  },
-];
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuGroup,
+} from "@/components/ui/dropdown-menu";
 
 interface AppSidebarProps {
   onItemClick?: () => void;
@@ -86,56 +29,12 @@ export function AppSidebar({
   collapsed = false,
 }: AppSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const [, startTransition] = React.useTransition();
-
-  // Track pending active path for instant UI feedback
-  const [prevPathname, setPrevPathname] = useState(pathname);
-  const [pendingPath, setPendingPath] = useState<string | null>(null);
-
-  // Sync pending path when route transition completes (official React pattern for state adjustments)
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    setPendingPath(null);
-  }
-
-  const currentPath = pendingPath ?? pathname;
-
-  // Pre-warm client cache for all sidebar routes
-  useEffect(() => {
-    NAV_SECTIONS.forEach((section) => {
-      section.items.forEach((item) => {
-        router.prefetch(item.href);
-      });
-    });
-  }, [router]);
 
   const isItemActive = (href: string) => {
     if (href === "/dashboard") {
-      return currentPath === "/" || currentPath === "/dashboard";
+      return pathname === "/" || pathname === "/dashboard";
     }
-    return currentPath.startsWith(href);
-  };
-
-  const handleItemClick = (
-    e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
-  ) => {
-    e.preventDefault();
-
-    // Ignore click if already on or pending for this tab
-    if (isItemActive(href)) {
-      return;
-    }
-
-    // Immediately update visual highlight for instant UI feedback
-    setPendingPath(href);
-    onItemClick?.();
-
-    // Transition smoothly without blocking or deadlocking
-    startTransition(() => {
-      router.push(href);
-    });
+    return pathname.startsWith(href);
   };
 
   return (
@@ -153,10 +52,10 @@ export function AppSidebar({
             {/* Section Header */}
             <div
               className={cn(
-                "whitespace-nowrap overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out",
+                "whitespace-nowrap overflow-hidden transition-[max-height,opacity,transform] duration-200 ease-in-out",
                 collapsed
-                  ? "max-h-0 opacity-0 pointer-events-none"
-                  : "max-h-7 opacity-100"
+                  ? "max-h-0 opacity-0 -translate-x-2 pointer-events-none"
+                  : "max-h-7 opacity-100 translate-x-0 delay-75"
               )}
             >
               <h3 className="px-3 text-sm font-bold text-foreground pb-1.5 tracking-tight">
@@ -177,7 +76,7 @@ export function AppSidebar({
             )}
 
             {/* Navigation Items */}
-            <nav className="space-y-1">
+            <nav className="space-y-1" aria-label={section.title}>
               {section.items.map((item) => {
                 const active = isItemActive(item.href);
                 const Icon = item.icon;
@@ -186,8 +85,7 @@ export function AppSidebar({
                   <Link
                     key={item.href}
                     href={item.href}
-                    prefetch={true}
-                    onClick={(e) => handleItemClick(e, item.href)}
+                    onClick={() => onItemClick?.()}
                     title={item.title}
                     className={cn(
                       "flex items-center h-12 w-full rounded-l-2xl rounded-r-none transition-colors duration-150 group relative overflow-hidden",
@@ -219,10 +117,10 @@ export function AppSidebar({
                     {/* Smoothly animated text label */}
                     <span
                       className={cn(
-                        "relative z-10 whitespace-nowrap overflow-hidden transition-[max-width,opacity,transform] duration-300 ease-in-out text-sm font-semibold tracking-tight",
+                        "relative z-10 whitespace-nowrap overflow-hidden text-sm font-semibold tracking-tight transition-[opacity,transform] duration-200 ease-in-out",
                         collapsed
-                          ? "max-w-0 opacity-0 translate-x-4 pointer-events-none"
-                          : "max-w-44 opacity-100 translate-x-0 pr-3",
+                          ? "opacity-0 -translate-x-2 pointer-events-none invisible w-0"
+                          : "opacity-100 translate-x-0 visible delay-100 flex-1 pr-3",
                         !active && "text-muted-foreground group-hover:text-foreground"
                       )}
                     >
@@ -236,45 +134,94 @@ export function AppSidebar({
         ))}
       </div>
 
-      {/* User Profile Card at Bottom */}
+      {/* User Profile Dropdown Menu at Bottom */}
       <div className="pt-3 mt-auto border-t border-border/50 pr-3">
-        <button
-          type="button"
-          title={collapsed ? "Admin User (Admin)" : undefined}
-          className="group flex items-center h-12 w-full rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors text-left border border-border/50 overflow-hidden relative"
-        >
-          {/* Avatar Container */}
-          <div className="size-10 shrink-0 flex items-center justify-center relative z-10">
-            <Avatar
-              size="sm"
-              className="size-8 rounded-full bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shrink-0"
-            >
-              <AvatarFallback className="bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 font-bold text-xs">
-                AU
-              </AvatarFallback>
-            </Avatar>
-          </div>
-
-          {/* User Details */}
-          <div
-            className={cn(
-              "relative z-10 flex items-center justify-between flex-1 min-w-0 overflow-hidden whitespace-nowrap transition-[max-width,opacity,transform] duration-300 ease-in-out",
-              collapsed
-                ? "max-w-0 opacity-0 translate-x-4 pointer-events-none"
-                : "max-w-[170px] opacity-100 translate-x-0 pr-3"
-            )}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            title={collapsed ? "Admin User (Admin)" : undefined}
+            className="group flex items-center h-12 w-full rounded-xl bg-muted/40 hover:bg-muted/70 transition-colors text-left border border-border/50 overflow-hidden relative cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-foreground truncate leading-tight">
-                Admin User
-              </span>
-              <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5">
-                Admin
-              </span>
+            {/* Avatar Container */}
+            <div className="size-10 shrink-0 flex items-center justify-center relative z-10">
+              <Avatar
+                size="sm"
+                className="size-8 rounded-full bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shrink-0"
+              >
+                <AvatarFallback className="bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 font-bold text-xs">
+                  AU
+                </AvatarFallback>
+              </Avatar>
             </div>
-            <ChevronUp className="size-4 text-muted-foreground shrink-0 ml-1.5" />
-          </div>
-        </button>
+
+            {/* User Details */}
+            <div
+              className={cn(
+                "relative z-10 flex items-center justify-between flex-1 min-w-0 overflow-hidden whitespace-nowrap transition-[opacity,transform] duration-200 ease-in-out",
+                collapsed
+                  ? "opacity-0 -translate-x-2 pointer-events-none invisible w-0"
+                  : "opacity-100 translate-x-0 visible delay-100 pr-3"
+              )}
+            >
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold text-foreground truncate leading-tight">
+                  Admin User
+                </span>
+                <span className="text-xs text-muted-foreground truncate leading-tight mt-0.5">
+                  Admin
+                </span>
+              </div>
+              <ChevronUp className="size-4 text-muted-foreground shrink-0 ml-1.5" />
+            </div>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            side={collapsed ? "right" : "top"}
+            align={collapsed ? "end" : "start"}
+            sideOffset={8}
+            className="w-56"
+          >
+            <DropdownMenuLabel className="p-2 font-normal">
+              <div className="flex items-center gap-2.5">
+                <Avatar
+                  size="sm"
+                  className="size-8 rounded-full bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 shrink-0"
+                >
+                  <AvatarFallback className="bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 font-bold text-xs">
+                    AU
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                    Admin User
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5">
+                    admin@canudental.com
+                  </p>
+                </div>
+              </div>
+            </DropdownMenuLabel>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuGroup>
+              <DropdownMenuItem className="cursor-pointer">
+                <User className="size-4 mr-2" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="size-4 mr-2" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
+              <LogOut className="size-4 mr-2" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );

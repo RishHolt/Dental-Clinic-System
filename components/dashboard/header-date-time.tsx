@@ -4,13 +4,26 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 
 const emptySubscribe = () => () => {};
 
+const dateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+});
+
+const timeFormatter = new Intl.DateTimeFormat("en-US", {
+  hour: "numeric",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true,
+});
+
 export function HeaderDateTime() {
   const isMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false
   );
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [currentTime, setCurrentTime] = useState<Date>(() => new Date());
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -21,30 +34,25 @@ export function HeaderDateTime() {
 
   if (!isMounted) {
     return (
-      <div className="flex flex-col items-end text-xs text-muted-foreground tabular-nums select-none">
-        <span>September 1, 2026</span>
-        <span>12:00:01 PM</span>
+      <div
+        className="flex flex-col items-end text-xs leading-tight text-muted-foreground tabular-nums select-none font-medium invisible"
+        aria-hidden="true"
+      >
+        <span className="tracking-tight">Loading date...</span>
+        <span className="tracking-tight">00:00:00 AM</span>
       </div>
     );
   }
 
-  const formattedDate = currentTime.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  const formattedTime = currentTime.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-
   return (
-    <div className="flex flex-col items-end text-xs leading-tight text-muted-foreground tabular-nums select-none font-medium">
-      <span className="tracking-tight">{formattedDate}</span>
-      <span className="tracking-tight text-foreground/80">{formattedTime}</span>
+    <div
+      className="flex flex-col items-end text-xs leading-tight text-muted-foreground tabular-nums select-none font-medium"
+      suppressHydrationWarning
+    >
+      <span className="tracking-tight">{dateFormatter.format(currentTime)}</span>
+      <span className="tracking-tight text-foreground/80">
+        {timeFormatter.format(currentTime)}
+      </span>
     </div>
   );
 }

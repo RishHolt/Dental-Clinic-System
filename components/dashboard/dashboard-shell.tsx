@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { ClinicLogo } from "./clinic-logo";
 import { AppSidebar } from "./app-sidebar";
@@ -12,6 +12,26 @@ import { cn } from "@/lib/utils";
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+
+  // Close mobile drawer on Escape key and lock body scroll
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
 
   const toggleSidebar = () => {
     if (typeof window !== "undefined" && window.innerWidth < 768) {
@@ -28,20 +48,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Top-left Box (Logo + Hamburger Toggle) */}
         <div
           className={cn(
-            "flex h-full shrink-0 items-center border-r border-border transition-[width] duration-300 ease-in-out overflow-hidden px-3",
-            desktopCollapsed ? "w-16 justify-center" : "w-64 justify-between"
+            "flex h-full shrink-0 items-center border-r border-border transition-[width,padding] duration-300 ease-in-out overflow-hidden",
+            desktopCollapsed
+              ? "w-16 px-3"
+              : "w-64 pl-4 pr-3"
           )}
         >
-          {/* Logo container: completely hidden and collapsed when sidebar is collapsed */}
-          <div
-            className={cn(
-              "overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out flex items-center",
-              desktopCollapsed
-                ? "max-w-0 opacity-0 -translate-x-6 pointer-events-none"
-                : "max-w-[180px] opacity-100 translate-x-0"
-            )}
-          >
-            <ClinicLogo />
+          {/* Logo container */}
+          <div className="flex-1 min-w-0 overflow-hidden flex items-center justify-center">
+            <ClinicLogo collapsed={desktopCollapsed} />
           </div>
 
           {/* Hamburger Menu Toggle Button */}
@@ -49,11 +64,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             variant="ghost"
             size="sm"
             onClick={toggleSidebar}
-            className={cn(
-              "text-muted-foreground hover:text-foreground shrink-0 transition-colors size-10 p-0 flex items-center justify-center rounded-xl",
-              desktopCollapsed ? "mx-auto" : "ml-auto"
-            )}
-            aria-label={desktopCollapsed ? "Expand navigation" : "Collapse navigation"}
+            className="text-muted-foreground hover:text-foreground shrink-0 transition-colors size-10 p-0 flex items-center justify-center rounded-xl ml-auto"
+            aria-label={
+              mobileMenuOpen
+                ? "Close navigation menu"
+                : desktopCollapsed
+                  ? "Expand navigation"
+                  : "Collapse navigation"
+            }
+            aria-expanded={mobileMenuOpen}
             title={desktopCollapsed ? "Expand navigation" : "Collapse navigation"}
           >
             <Menu className="size-5" />
@@ -77,21 +96,28 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Sidebar Overlay Drawer */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="fixed inset-0 z-50 md:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation drawer"
+          >
             {/* Backdrop */}
             <div
+              aria-hidden="true"
               className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
               onClick={() => setMobileMenuOpen(false)}
             />
             {/* Drawer */}
             <div className="fixed inset-y-0 left-0 z-50 w-64 bg-background shadow-xl flex flex-col h-full">
-              <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
                 <ClinicLogo />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setMobileMenuOpen(false)}
                   className="size-8 p-1"
+                  aria-label="Close navigation"
                 >
                   <X className="size-5" />
                 </Button>

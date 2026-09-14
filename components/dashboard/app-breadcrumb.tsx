@@ -10,23 +10,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-
-const ROUTE_LABELS: Record<string, string> = {
-  dashboard: "Dashboard",
-  "daily-waitlist": "Daily Waitlist",
-  calendar: "Calendar",
-  patient: "Patient",
-  masterfile: "Masterfile",
-  expenses: "Expenses",
-};
+import { getRouteTitle } from "@/lib/navigation";
 
 export function AppBreadcrumb() {
   const pathname = usePathname();
-  const segments = pathname.split("/").filter(Boolean);
-
-  // If on root or empty segments, default to Dashboard
-  const currentKey = segments[0] || "dashboard";
-  const currentLabel = ROUTE_LABELS[currentKey] || "Dashboard";
+  const currentLabel = getRouteTitle(pathname);
 
   return (
     <Breadcrumb>

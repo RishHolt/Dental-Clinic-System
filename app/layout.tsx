@@ -13,7 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CANU Dental Clinic",
+  title: {
+    default: "CANU Dental Clinic",
+    template: "%s | CANU Dental Clinic",
+  },
   description: "CANU Dental Clinic Management System",
 };
 
