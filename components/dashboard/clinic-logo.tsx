@@ -20,10 +20,10 @@ export function ClinicLogo({ className, collapsed = false }: ClinicLogoProps) {
       )}
       title="CANU Dental Clinic"
     >
-      <span className="font-serif text-lg md:text-xl font-bold tracking-wider text-[#b88c30] uppercase leading-none transition-colors group-hover:text-[#a07724] text-center">
+      <span className="font-serif text-lg md:text-xl font-bold tracking-wider text-primary uppercase leading-none transition-colors group-hover:text-primary/85 text-center">
         CANU
       </span>
-      <span className="font-serif text-[11px] md:text-xs italic font-medium tracking-wide text-[#b88c30] mt-1 leading-none transition-colors group-hover:text-[#a07724] text-center">
+      <span className="font-serif text-[11px] md:text-xs italic font-semibold tracking-wide text-[#ba9232] dark:text-[#d4aa3e] mt-1 leading-none transition-colors text-center">
         Dental Clinic
       </span>
     </Link>

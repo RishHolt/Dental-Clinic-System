@@ -6,6 +6,7 @@ import { ClinicLogo } from "./clinic-logo";
 import { AppSidebar } from "./app-sidebar";
 import { AppBreadcrumb } from "./app-breadcrumb";
 import { HeaderDateTime } from "./header-date-time";
+import { ThemeToggle } from "./theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -82,7 +83,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Breadcrumb & Date/Time Section */}
         <div className="flex flex-1 items-center justify-between px-6 py-2 min-w-0">
           <AppBreadcrumb />
-          <HeaderDateTime />
+          <div className="flex items-center gap-3 shrink-0">
+            <HeaderDateTime />
+            <div className="h-4 w-px bg-border/80 shrink-0" />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
